@@ -38,12 +38,18 @@ class Post(BaseModel):
 
 my_posts = [ {"title ": "title of post 1", "content": "content of post 1", "id": 1}, {"title ": "favorite foods", "content": "I like pizza", "id": 2} ]
 
-def find_post(id):
-     for p in my_posts:
+def find_post(id: int):
+     for p in posts:
           if p["id"] == id:
                return p
 
 
+def find_index_post(id: int)
+   for i,p in enumerate(posts):
+       if p["id"] == id:
+           return i
+       
+       
      
 
 @app.post("/posts")    
@@ -60,6 +66,14 @@ def get_post(id: int):
      post = find_post(id)
      print(post)
      return {"post_detail": post}
+
+@app.get('/posts/latest')
+def get_post_latest():
+    lates_post = my_posts[len(my_posts) - 1]
+    return lates_post
+
+
+
      
 
 
