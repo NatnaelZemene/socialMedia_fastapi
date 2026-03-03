@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
@@ -10,7 +10,7 @@ app = FastAPI()
 #     return {"Hello": "wellcome to my api, hehe I am nathy cuze i am love codding an i am learning fastapi frameworks"}
   
 
-# @app.get("/posts")
+ # @app.get("/posts")
 # def get_post():
 #     return {"data": "this is a post method:"}
 
@@ -28,15 +28,14 @@ app = FastAPI()
 #      return {"message" : f"Hello papa, wellcome to my api"}
     
  
-posts = []
+posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1}, {"title": "favorite foods", "content": "I like pizza", "id": 2}]
 
 class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-#     rating: Optional[int] = None
+    rating: int
 
-my_posts = [ {"title ": "title of post 1", "content": "content of post 1", "id": 1}, {"title ": "favorite foods", "content": "I like pizza", "id": 2} ]
 
 def find_post(id: int):
      for p in posts:
@@ -44,13 +43,11 @@ def find_post(id: int):
                return p
 
 
-def find_index_post(id: int)
-   for i,p in enumerate(posts):
-       if p["id"] == id:
-           return i
+def find_index_post(id: int):
+    for i, p in enumerate(posts):
+        if p["id"] == id:
+            return i
        
-       
-     
 
 @app.post("/posts")    
 def create_posts(post: Post):
@@ -65,15 +62,45 @@ def get_post(id: int):
      print(id)
      post = find_post(id)
      print(post)
+     if not post:
+         raise HTTPException(status_code=404, detail="post not found")
      return {"post_detail": post}
 
 @app.get('/posts/latest')
 def get_post_latest():
-    lates_post = my_posts[len(my_posts) - 1]
-    return lates_post
+    if not posts:
+        raise HTTPException(status_code=404, detail="no posts")
+    latest_post = posts[-1]
+    return latest_post
 
 
+# Update 
+@app.put('/posts/{id}')
+def update_post(id: int, post: Post):
+    index = find_index_post(id)
+    if index is None:
+        raise HTTPException(status_code=404, detail="post not found")
 
+    updated = post.dict()
+    updated['id'] = id
+
+    posts[index] = updated
+    return {"data": updated}
+
+# Delete
+
+@app.delete('/posts/{id}')
+def delete_post(id : int):
+    index = find_index_post(id)
+    
+    if index is None:
+        raise HTTPException(status_code=404, detail= "Post not found")
+    
+    deleted_post = posts.pop(index)
+    return {"message": "Post deleted successfully",
+             "data": delete_post}
+    
+  
      
 
 
