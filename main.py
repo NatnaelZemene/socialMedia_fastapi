@@ -2,8 +2,33 @@ from fastapi import FastAPI, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import time
 
 app = FastAPI()
+while True:
+    
+    try:
+        conn = psycopg2.connect(host= "localhost", database= "fastapi", user = 'postgres', password = 'root', cursor_factory= RealDictCursor ) 
+        cur = conn.cursor()
+        print('Database connection was successful')
+        break
+        
+    except Exception as error:
+        print('connection to database failed')
+        err_str = str(error)
+        print('error:', err_str)
+        if 'password authentication failed' in err_str:
+            print('wrong password')
+        elif 'does not exist' in err_str or 'database' in err_str:
+            print('database does not exist')
+        elif 'role' in err_str or 'user' in err_str:
+            print('user/role does not exist')
+        else:
+            print('unknown connection error')
+        time.sleep(2)
+
 
 # @app.get("/")
 # async def read_root():
@@ -26,7 +51,8 @@ app = FastAPI()
 # @app.get("/greet/{name}")
 # def greeting(name: str):
 #      return {"message" : f"Hello papa, wellcome to my api"}
-    
+
+
  
 posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1}, {"title": "favorite foods", "content": "I like pizza", "id": 2}]
 
@@ -34,7 +60,7 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating: int
+
 
 
 def find_post(id: int):
@@ -49,6 +75,8 @@ def find_index_post(id: int):
             return i
        
 
+
+
 @app.post("/posts")    
 def create_posts(post: Post):
     post_dict = post.dict()
@@ -57,21 +85,22 @@ def create_posts(post: Post):
     return {"data": post_dict}
 
 
-@app.get('/posts/{id}')
-def get_post(id: int):
-     print(id)
-     post = find_post(id)
-     print(post)
-     if not post:
-         raise HTTPException(status_code=404, detail="post not found")
-     return {"post_detail": post}
-
 @app.get('/posts/latest')
 def get_post_latest():
     if not posts:
         raise HTTPException(status_code=404, detail="no posts")
     latest_post = posts[-1]
     return latest_post
+
+
+@app.get('/posts/{id}')
+def get_post(id: int):
+    print(id)
+    post = find_post(id)
+    print(post)
+    if not post:
+        raise HTTPException(status_code=404, detail="post not found")
+    return {"post_detail": post}
 
 
 # Update 
@@ -98,9 +127,9 @@ def delete_post(id : int):
     
     deleted_post = posts.pop(index)
     return {"message": "Post deleted successfully",
-             "data": delete_post}
+             "data": deleted_post}
     
-  
+    
      
 
 
